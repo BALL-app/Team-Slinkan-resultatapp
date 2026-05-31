@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Team Slinkan</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Slinkan">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,system-ui,sans-serif;
+      background:#eef4f8;
+      color:#1e293b;
+      height:100vh;
+      overflow:hidden;
+    }
+    header{
+      height:64px;
+      padding:8px 10px;
+      background:linear-gradient(90deg,#0f766e,#2563eb);
+      color:white;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+    }
+    h1{margin:0;font-size:1.35rem;line-height:1.05}
+    .sub{font-size:.76rem;opacity:.95;margin-top:2px}
+    .top{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+    button{
+      border:0;
+      border-radius:12px;
+      padding:8px 10px;
+      font-size:.84rem;
+      font-weight:800;
+      cursor:pointer;
+      background:#e2e8f0;
+      color:#1e293b;
+    }
+    .top button{
+      background:rgba(255,255,255,.18);
+      border:1px solid rgba(255,255,255,.32);
+      color:white;
+      padding:7px 8px;
+    }
+    .main{background:linear-gradient(90deg,#0891b2,#2563eb);color:white}
+    .orange{background:#f97316;color:white}
+    .blue{background:#38bdf8;color:white}
+    .danger{background:#fb7185;color:white}
+    .app{
+      height:calc(100vh - 64px);
+      padding:7px 8px 126px;
+      overflow:hidden;
+    }
+    .panel{
+      height:100%;
+      background:white;
+      border-radius:18px;
+      padding:8px;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      box-shadow:0 5px 16px rgba(15,23,42,.08);
+    }
+    #roundInfo{
+      color:#64748b;
+      font-size:.84rem;
+      margin:0 0 6px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .grid{
+      flex:1;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:7px;
+      overflow:auto;
+      padding-bottom:4px;
+    }
+    .player{
+      background:#f8fbfd;
+      border:1px solid #d8e2ea;
+      border-radius:14px;
+      padding:4px;
+      min-height:62px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+    }
+    .playerName{font-size:.9rem;font-weight:800;margin-bottom:2px}
+    .controls{display:flex;align-items:center;gap:5px}
+    .pm{
+      width:28px;
+      height:28px;
+      padding:0;
+      border-radius:9px;
+      font-size:1rem;
+      line-height:1;
+    }
+    .score{
+      min-width:34px;
+      text-align:center;
+      font-size:1.65rem;
+      font-weight:900;
+      line-height:1;
+    }
+    .bottom{
+      position:fixed;
+      left:8px;
+      right:8px;
+      bottom:8px;
+      background:white;
+      padding:8px;
+      border-radius:17px;
+      box-shadow:0 -2px 12px rgba(15,23,42,.14);
+      z-index:10;
+    }
+    .commentRow{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      margin-bottom:7px;
+    }
+    .commentRow input{
+      width:100%;
+      min-width:0;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid #cbd5e1;
+      font-size:.92rem;
+    }
+    .buttonRow{display:flex;gap:8px}
+    .buttonRow button{flex:1;padding:11px 6px}
+    .popup{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.55);
+      display:none;
+      justify-content:center;
+      align-items:center;
+      padding:14px;
+      z-index:50;
+    }
+    .popupContent{
+      background:white;
+      width:min(780px,100%);
+      max-height:90vh;
+      overflow:auto;
+      border-radius:22px;
+      padding:18px;
+      box-shadow:0 18px 50px rgba(0,0,0,.25);
+    }
+    .popupHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .popupHead h2{margin:0;font-size:1.35rem}
+    label{display:block;font-weight:800;margin:10px 0 4px}
+    input,select,textarea{
+      width:100%;
+      padding:11px;
+      border-radius:12px;
+      border:1px solid #cbd5e1;
+      font-size:1rem;
+      background:white;
+      font-family:Arial,system-ui,sans-serif;
+    }
+    textarea{resize:vertical;min-height:64px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{
+      display:flex;
+      align-items:center;
+      gap:5px;
+      padding:8px 11px;
+      border:1px solid #d6dee8;
+      background:#f1f5f9;
+      border-radius:999px;
+      font-weight:700;
+    }
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .actions button{flex:1;min-width:120px}
+    .tableWrap{overflow:auto;max-height:58vh;border-radius:12px;border:1px solid #e2e8f0}
+    table{width:100%;border-collapse:collapse;font-size:.87rem}
+    th,td{padding:8px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}
+    th{background:#f8fafc;color:#475569;position:sticky;top:0}
+    .tinyBtn{padding:6px 8px;font-size:.76rem;border-radius:9px}
+    .notice{background:#dcfce7;color:#166534;padding:8px;border-radius:12px;margin-top:8px;display:none}
+    .muted{color:#64748b;font-size:.9rem}
+    .playerCommentGrid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:9px;
+    }
+    .pcard{
+      background:#f8fafc;
+      border:1px solid #e2e8f0;
+      border-radius:14px;
+      padding:10px;
+    }
+    .pcardTitle{font-weight:900;margin-bottom:5px}
+    @media(max-height:680px){
+      header{height:58px}
+      .app{height:calc(100vh - 58px);padding-bottom:116px}
+      h1{font-size:1.2rem}
+      .sub{display:none}
+      .player{min-height:53px}
+      .score{font-size:1.38rem}
+      .pm{width:26px;height:26px}
+      .playerName{font-size:.82rem}
+      .commentRow input{padding:8px}
+      .buttonRow button{padding:9px 5px}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Team Slinkan</h1>
+    <div class="sub">Discgolf-resultat</div>
+  </div>
+  <div class="top">
+    <button onclick="openSetup()">Ny</button>
+    <button onclick="showHistory()">Historik</button>
+    <button onclick="showStats()">Årsbästa</button>
+  </div>
+</header>
+
+<main class="app">
+  <section class="panel">
+    <div id="roundInfo"></div>
+    <div class="grid" id="scoreGrid"></div>
+    <div class="notice" id="notice">Sparat.</div>
+  </section>
+</main>
+
+<div class="bottom">
+  <div class="commentRow">
+    <input id="roundComment" placeholder="Kommentar för rundan, t.ex. hoppade över hål">
+    <button onclick="openPlayerComments()">Spelarkommentar</button>
+  </div>
+  <div class="buttonRow">
+    <button class="main" onclick="saveRound()">Spara</button>
+    <button onclick="exportExcel()">Excel</button>
+    <button onclick="document.getElementById('importFile').click()">Import</button>
+    <input id="importFile" type="file" accept=".xlsx,.xls" style="display:none" onchange="importExcel(event)">
+  </div>
+</div>
+
+<div class="popup" id="setupPopup">
+  <div class="popupContent">
+    <div class="popupHead"><h2>Ny runda</h2><button onclick="closeSetup()">Stäng</button></div>
+    <label>Datum</label>
+    <input id="dateInput" type="date">
+    <label>Bana</label>
+    <select id="courseInput" onchange="toggleCustomCourse()">
+      <option>Skellefteå Terminalen</option>
+      <option>Annan bana</option>
+    </select>
+    <input id="customCourse" placeholder="Skriv bana" style="display:none;margin-top:8px">
+    <label>Layout</label>
+    <select id="layoutInput" onchange="toggleCustomLayout()">
+      <option selected>Gul bana</option>
+      <option>Röd bana</option>
+      <option>Blå bana</option>
+      <option>Svart bana</option>
+      <option>Annan layout</option>
+    </select>
+    <input id="customLayout" placeholder="Skriv layout" style="display:none;margin-top:8px">
+    <label>Vilka spelade?</label>
+    <div class="chips" id="playerChecks"></div>
+    <input id="extraPlayer" placeholder="Lägg till annan spelare" style="margin-top:10px">
+    <div class="actions">
+      <button class="main" onclick="applySetup()">Visa reglage</button>
+    </div>
+  </div>
+</div>
+
+<div class="popup" id="playerCommentPopup">
+  <div class="popupContent">
+    <div class="popupHead"><h2>Kommentar per spelare</h2><button onclick="closePopup('playerCommentPopup')">Stäng</button></div>
+    <p class="muted">Valfritt. Sparas tillsammans med resultatet för respektive spelare.</p>
+    <div id="playerCommentFields" class="playerCommentGrid"></div>
+    <div class="actions">
+      <button class="main" onclick="savePlayerCommentsAndClose()">Klar</button>
+    </div>
+  </div>
+</div>
+
+<div class="popup" id="historyPopup">
+  <div class="popupContent">
+    <div class="popupHead"><h2>Historik</h2><button onclick="closePopup('historyPopup')">Stäng</button></div>
+    <div id="historyContent"></div>
+  </div>
+</div>
+
+<div class="popup" id="statsPopup">
+  <div class="popupContent">
+    <div class="popupHead"><h2>Årsbästa</h2><button onclick="closePopup('statsPopup')">Stäng</button></div>
+    <div id="statsContent"></div>
+  </div>
+</div>
+
+<div class="popup" id="editPopup">
+  <div class="popupContent">
+    <div class="popupHead"><h2>Ändra resultat</h2><button onclick="closePopup('editPopup')">Stäng</button></div>
+    <input type="hidden" id="editIndex">
+    <label>Datum</label><input id="editDate" type="date">
+    <label>Spelare</label><input id="editPlayer">
+    <label>Bana</label><input id="editCourse">
+    <label>Layout</label><input id="editLayout">
+    <label>Resultat över/under par</label><input id="editScore" type="number">
+    <label>Kommentar för rundan</label><textarea id="editRoundComment"></textarea>
+    <label>Kommentar för spelaren</label><textarea id="editPlayerComment"></textarea>
+    <div class="actions"><button class="main" onclick="saveEdit()">Spara ändring</button></div>
+  </div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+}
+
+const defaultPlayers = ["Alexander","Anton","Linus","Simon"];
+let activePlayers = [...defaultPlayers];
+let scores = {};
+let playerComments = {};
+let currentRound = {date: today(), course:"Skellefteå Terminalen", layout:"Gul bana"};
+let rounds = JSON.parse(localStorage.getItem("teamSlinkanRounds") || "[]");
+
+function today(){
+  const d = new Date();
+  const offset = d.getTimezoneOffset();
+  return new Date(d.getTime() - offset*60000).toISOString().slice(0,10);
+}
+function format(v){
+  v = Number(v || 0);
+  return v === 0 ? "E" : (v > 0 ? "+" + v : String(v));
+}
+function saveLocal(){
+  localStorage.setItem("teamSlinkanRounds", JSON.stringify(rounds));
+}
+function renderChecks(){
+  const box = document.getElementById("playerChecks");
+  box.innerHTML = defaultPlayers.map(p => `
+    <label class="chip"><input type="checkbox" value="${p}" ${activePlayers.includes(p) ? "checked" : ""}> ${p}</label>
+  `).join("");
+}
+function render(){
+  const grid = document.getElementById("scoreGrid");
+  grid.innerHTML = "";
+  activePlayers.forEach(player => {
+    if(scores[player] === undefined) scores[player] = 0;
+    if(playerComments[player] === undefined) playerComments[player] = "";
+    grid.innerHTML += `
+      <div class="player">
+        <div class="playerName">${escapeHtml(player)}</div>
+        <div class="controls">
+          <button class="pm minus" onclick="changeScore('${jsEscape(player)}',-1)">−</button>
+          <div class="score">${format(scores[player])}</div>
+          <button class="pm plus" onclick="changeScore('${jsEscape(player)}',1)">+</button>
+        </div>
+      </div>`;
+  });
+  document.getElementById("roundInfo").textContent = `${currentRound.date} • ${currentRound.course} • ${currentRound.layout}`;
+}
+function changeScore(player, amount){
+  scores[player] = Number(scores[player] || 0) + amount;
+  render();
+}
+function openSetup(){
+  document.getElementById("dateInput").value = currentRound.date || today();
+  document.getElementById("courseInput").value = defaultCourseOption(currentRound.course);
+  document.getElementById("layoutInput").value = defaultLayoutOption(currentRound.layout);
+  document.getElementById("customCourse").value = defaultCourseOption(currentRound.course) === "Annan bana" ? currentRound.course : "";
+  document.getElementById("customLayout").value = defaultLayoutOption(currentRound.layout) === "Annan layout" ? currentRound.layout : "";
+  toggleCustomCourse(); toggleCustomLayout(); renderChecks();
+  document.getElementById("setupPopup").style.display = "flex";
+}
+function closeSetup(){ closePopup("setupPopup"); }
+function closePopup(id){ document.getElementById(id).style.display = "none"; }
+function toggleCustomCourse(){
+  document.getElementById("customCourse").style.display = document.getElementById("courseInput").value === "Annan bana" ? "block" : "none";
+}
+function toggleCustomLayout(){
+  document.getElementById("customLayout").style.display = document.getElementById("layoutInput").value === "Annan layout" ? "block" : "none";
+}
+function defaultCourseOption(v){ return v === "Skellefteå Terminalen" ? v : "Annan bana"; }
+function defaultLayoutOption(v){ return ["Gul bana","Röd bana","Blå bana","Svart bana"].includes(v) ? v : "Annan layout"; }
+
+function applySetup(){
+  const selected = [...document.querySelectorAll('#playerChecks input:checked')].map(x => x.value);
+  const extra = document.getElementById("extraPlayer").value.trim();
+  if(extra) selected.push(extra);
+  activePlayers = selected.length ? selected : [...defaultPlayers];
+
+  const newScores = {};
+  const newComments = {};
+  activePlayers.forEach(p => {
+    newScores[p] = scores[p] ?? 0;
+    newComments[p] = playerComments[p] ?? "";
+  });
+  scores = newScores;
+  playerComments = newComments;
+
+  const courseSelect = document.getElementById("courseInput").value;
+  const layoutSelect = document.getElementById("layoutInput").value;
+  currentRound = {
+    date: document.getElementById("dateInput").value || today(),
+    course: courseSelect === "Annan bana" ? (document.getElementById("customCourse").value.trim() || "Annan bana") : courseSelect,
+    layout: layoutSelect === "Annan layout" ? (document.getElementById("customLayout").value.trim() || "Annan layout") : layoutSelect
+  };
+  document.getElementById("extraPlayer").value = "";
+  render();
+  closeSetup();
+}
+function openPlayerComments(){
+  const box = document.getElementById("playerCommentFields");
+  box.innerHTML = activePlayers.map(p => `
+    <div class="pcard">
+      <div class="pcardTitle">${escapeHtml(p)}</div>
+      <textarea data-player="${escapeHtml(p)}" placeholder="Kommentar för ${escapeHtml(p)}">${escapeHtml(playerComments[p] || "")}</textarea>
+    </div>
+  `).join("");
+  document.getElementById("playerCommentPopup").style.display = "flex";
+}
+function savePlayerCommentsAndClose(){
+  document.querySelectorAll("#playerCommentFields textarea").forEach(t => {
+    playerComments[t.dataset.player] = t.value;
+  });
+  closePopup("playerCommentPopup");
+}
+function saveRound(){
+  if(!activePlayers.length){ alert("Välj minst en spelare."); return; }
+  savePlayerCommentsFromOpenPopup();
+  const generalComment = document.getElementById("roundComment").value.trim();
+  activePlayers.forEach(player => rounds.push({
+    date: currentRound.date,
+    course: currentRound.course,
+    layout: currentRound.layout,
+    player,
+    score: Number(scores[player] || 0),
+    roundComment: generalComment,
+    playerComment: (playerComments[player] || "").trim(),
+    savedAt: new Date().toLocaleString("sv-SE")
+  }));
+  saveLocal();
+  document.getElementById("roundComment").value = "";
+  playerComments = {};
+  activePlayers.forEach(p => playerComments[p] = "");
+  showNotice("Rundan sparades.");
+}
+function savePlayerCommentsFromOpenPopup(){
+  document.querySelectorAll("#playerCommentFields textarea").forEach(t => {
+    playerComments[t.dataset.player] = t.value;
+  });
+}
+function showNotice(txt){
+  const n = document.getElementById("notice");
+  n.textContent = txt;
+  n.style.display = "block";
+  setTimeout(() => n.style.display = "none", 1700);
+}
+function showHistory(){
+  const box = document.getElementById("historyContent");
+  if(!rounds.length){
+    box.innerHTML = `<p class="muted">Inga rundor sparade ännu.</p>`;
+  } else {
+    box.innerHTML = `<div class="tableWrap"><table>
+      <thead><tr><th>Datum</th><th>Spelare</th><th>Layout</th><th>Resultat</th><th>Kommentar</th><th></th></tr></thead>
+      <tbody>${rounds.map((r,i)=>`
+        <tr>
+          <td>${escapeHtml(r.date)}</td>
+          <td>${escapeHtml(r.player)}</td>
+          <td>${escapeHtml(r.layout)}</td>
+          <td><b>${format(r.score)}</b></td>
+          <td>${commentCell(r)}</td>
+          <td>
+            <button class="tinyBtn" onclick="openEdit(${i})">Ändra</button>
+            <button class="tinyBtn danger" onclick="deleteRound(${i})">Radera</button>
+          </td>
+        </tr>`).join("")}</tbody></table></div>`;
+  }
+  document.getElementById("historyPopup").style.display = "flex";
+}
+function commentCell(r){
+  const parts = [];
+  if(r.roundComment) parts.push(`<b>Runda:</b> ${escapeHtml(r.roundComment)}`);
+  if(r.playerComment) parts.push(`<b>Spelare:</b> ${escapeHtml(r.playerComment)}`);
+  return parts.length ? parts.join("<br>") : "";
+}
+function deleteRound(i){
+  if(confirm("Radera detta resultat?")){
+    rounds.splice(i,1);
+    saveLocal();
+    showHistory();
+  }
+}
+function openEdit(i){
+  const r = rounds[i];
+  document.getElementById("editIndex").value = i;
+  document.getElementById("editDate").value = r.date || today();
+  document.getElementById("editPlayer").value = r.player || "";
+  document.getElementById("editCourse").value = r.course || "";
+  document.getElementById("editLayout").value = r.layout || "";
+  document.getElementById("editScore").value = Number(r.score || 0);
+  document.getElementById("editRoundComment").value = r.roundComment || "";
+  document.getElementById("editPlayerComment").value = r.playerComment || "";
+  document.getElementById("editPopup").style.display = "flex";
+}
+function saveEdit(){
+  const i = Number(document.getElementById("editIndex").value);
+  if(Number.isNaN(i) || !rounds[i]) return;
+  rounds[i] = {
+    ...rounds[i],
+    date: document.getElementById("editDate").value || today(),
+    player: document.getElementById("editPlayer").value.trim() || "Okänd",
+    course: document.getElementById("editCourse").value.trim() || "Okänd bana",
+    layout: document.getElementById("editLayout").value.trim() || "Okänd layout",
+    score: Number(document.getElementById("editScore").value || 0),
+    roundComment: document.getElementById("editRoundComment").value.trim(),
+    playerComment: document.getElementById("editPlayerComment").value.trim()
+  };
+  saveLocal();
+  closePopup("editPopup");
+  showHistory();
+}
+function showStats(){
+  const year = new Date().getFullYear();
+  const best = {};
+  rounds.forEach(r => {
+    const y = new Date(r.date).getFullYear();
+    if(y !== year) return;
+    const key = `${r.player}|${r.layout}`;
+    if(!best[key] || Number(r.score) < Number(best[key].score)) best[key] = r;
+  });
+  const rows = Object.values(best).sort((a,b)=>a.player.localeCompare(b.player) || a.layout.localeCompare(b.layout));
+  const box = document.getElementById("statsContent");
+  if(!rows.length){
+    box.innerHTML = `<p class="muted">Inga resultat för ${year} ännu.</p>`;
+  } else {
+    box.innerHTML = `<p class="muted">Bästa resultat per spelare och layout under ${year}.</p>
+    <div class="tableWrap"><table>
+      <thead><tr><th>Spelare</th><th>Layout</th><th>Bästa</th><th>Datum</th><th>Kommentar</th></tr></thead>
+      <tbody>${rows.map(r=>`
+        <tr><td>${escapeHtml(r.player)}</td><td>${escapeHtml(r.layout)}</td><td><b>${format(r.score)}</b></td><td>${escapeHtml(r.date)}</td><td>${commentCell(r)}</td></tr>
+      `).join("")}</tbody></table></div>`;
+  }
+  document.getElementById("statsPopup").style.display = "flex";
+}
+function exportExcel(){
+  if(!rounds.length){ alert("Inga resultat att exportera."); return; }
+  if(typeof XLSX === "undefined"){ alert("Excel-biblioteket kunde inte laddas. Testa med internetuppkoppling första gången."); return; }
+  const wb = XLSX.utils.book_new();
+  const grouped = {};
+  rounds.forEach(r => {
+    const key = r.layout || "Övrigt";
+    if(!grouped[key]) grouped[key] = [];
+    grouped[key].push({
+      Datum:r.date,
+      Spelare:r.player,
+      Bana:r.course,
+      Layout:r.layout,
+      Resultat:r.score,
+      ResultatText:format(r.score),
+      KommentarRunda:r.roundComment || "",
+      KommentarSpelare:r.playerComment || "",
+      Sparad:r.savedAt || ""
+    });
+  });
+  Object.entries(grouped).forEach(([name,data]) => {
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), safeSheetName(name));
+  });
+  XLSX.writeFile(wb, `team_slinkan_resultat_${today()}.xlsx`);
+}
+function importExcel(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  if(typeof XLSX === "undefined"){ alert("Excel-biblioteket kunde inte laddas."); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
+    let imported = [];
+    wb.SheetNames.forEach(name => {
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[name]);
+      rows.forEach(r => imported.push({
+        date: r.date || r.Datum || today(),
+        player: r.player || r.Spelare || "Okänd",
+        course: r.course || r.Bana || "Okänd bana",
+        layout: r.layout || r.Layout || name,
+        score: Number(r.score ?? r.Resultat ?? r.ResultatOverPar ?? 0),
+        roundComment: r.roundComment || r.KommentarRunda || "",
+        playerComment: r.playerComment || r.KommentarSpelare || "",
+        savedAt: r.savedAt || r.Sparad || "Importerad"
+      }));
+    });
+    rounds = rounds.concat(imported);
+    saveLocal();
+    event.target.value = "";
+    showNotice("Excel importerad.");
+  };
+  reader.readAsArrayBuffer(file);
+}
+function safeSheetName(name){
+  return String(name).replace(/[\\/?*[\]:]/g," ").substring(0,31) || "Blad";
+}
+function escapeHtml(v){
+  return String(v ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function jsEscape(v){
+  return String(v).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+}
+
+window.addEventListener("beforeunload", e => {
+  e.preventDefault();
+  e.returnValue = "";
+});
+
+document.getElementById("dateInput").value = today();
+defaultPlayers.forEach(p => { scores[p] = 0; playerComments[p] = ""; });
+renderChecks();
+render();
+</script>
+</body>
+</html>
